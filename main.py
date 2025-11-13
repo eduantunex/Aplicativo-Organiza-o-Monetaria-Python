@@ -1,16 +1,22 @@
 import customtkinter as ctk
 import sqlite3 as sq
+import platform
+
+so = platform.system()
 
 #configurando o banco de dados
 conn = sq.connect("databases/database.db")
 cursor = conn.cursor()
-cursor.execute("CREATE TABLE IF NOT EXISTS extrato (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, valor REAL, description TEXT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS extrato (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, valor REAL, description TEXT, option TEXT)")
 
 def puxar_extrato():
-    cursor.execute("SELECT nome, valor, description FROM extrato ORDER BY id DESC")
+    cursor.execute("SELECT nome, valor, description, option FROM extrato ORDER BY id DESC")
     puxada_resultado = cursor.fetchall()
     return puxada_resultado
 
+if so == "Darwin":
+    ctk.set_widget_scaling(0.9)   # aumenta tamanho geral dos widgets
+    ctk.set_window_scaling(1.1)   # aumenta janela e texto
 
 a = "San Francisco"
 
@@ -20,6 +26,7 @@ janela.title("Organização Monetaria - By Antunes")
 janela.geometry("1700x900")
 janela.resizable(False,False)
 janela.iconbitmap("images/icone.ico")
+janela._set_appearance_mode("dark")
 
 def destruir():
     for widget in janela.winfo_children():
@@ -35,9 +42,13 @@ def tela_dashboard():
     extrato_frame = ctk.CTkScrollableFrame(janela, width=250, height=700, fg_color="#2f2f2f")
     extrato_frame.place(relx=0.15, rely=0.63, anchor="center")
 
-    for nome, valor, description in puxar_extrato():
-        item = ctk.CTkLabel(extrato_frame, text=f"R${valor} | {nome}", fg_color="green", corner_radius=10)
-        item.pack(pady=3)
+    for nome, valor, description, option in puxar_extrato():
+        if option == "VENDA":
+            item = ctk.CTkLabel(extrato_frame, text=f"+R${valor} | {nome}", fg_color="green", corner_radius=10)
+            item.pack(pady=3)
+        else:
+            item = ctk.CTkLabel(extrato_frame, text=f"-R${valor} | {nome}", fg_color="red", corner_radius=10)
+            item.pack(pady=3)
 
     extrato_title = ctk.CTkLabel(janela, text="Seu extrato", font=(a, 20))
     extrato_title.place(relx=0.15, rely=0.2, anchor="center")
@@ -54,6 +65,8 @@ def tela_dashboard():
 
 def tela_add_entrada():
     destruir()
+
+    option_var = ctk.StringVar(value="")
 
     botao_voltar = ctk.CTkButton(janela, text="Voltar",width=200, height=50, fg_color="#620000", command=tela_dashboard)
     botao_voltar.place(relx=0.5, rely=0.9, anchor="center")
@@ -76,6 +89,18 @@ def tela_add_entrada():
     aviso_label = ctk.CTkLabel(box_frame, text="", text_color="#620000")
     aviso_label.place(relx=0.5, rely=0.8, anchor="center")
 
+    frame_venda = ctk.CTkFrame(box_frame, width=100, height=40, corner_radius=10, fg_color="green")
+    frame_venda.place(relx=0.3, rely=0.4, anchor="center")
+    button_venda = ctk.CTkRadioButton(box_frame, text="Venda", value="VENDA", corner_radius=10, fg_color="green", font=(a,13), variable=option_var)
+    button_venda.place(relx=0.3, rely=0.4, anchor="center")
+
+    frame_compra = ctk.CTkFrame(box_frame, width=100, height=40, corner_radius=10, fg_color="green")
+    frame_compra.place(relx=0.65, rely=0.4, anchor="center")
+    button_compra = ctk.CTkRadioButton(box_frame, text="Compra", value="COMPRA", fg_color="green", font=(a,13), variable=option_var)
+    button_compra.place(relx=0.65, rely=0.4, anchor="center")
+
+
+
     def enviar_entrada():
         nome = nome_prompt.get()
         try:
@@ -84,7 +109,14 @@ def tela_add_entrada():
             aviso_label.configure(text="Digite apenas numeros")
 
         description = description_prompt.get()
-        cursor.execute("INSERT INTO extrato (nome, valor, description) VALUES (?,?,?)", (nome, valor, description))
+        try:
+            if option_var.get() == "VENDA":
+                option = "VENDA"
+            elif option_var.get() == "COMPRA":
+                option = "COMPRA"
+        except:
+            aviso_label.configure(text="Selecione uma opção")
+        cursor.execute("INSERT INTO extrato (nome, valor, description, option) VALUES (?,?,?,?)", (nome, valor, description, option))
         conn.commit()
         tela_dashboard()
 
