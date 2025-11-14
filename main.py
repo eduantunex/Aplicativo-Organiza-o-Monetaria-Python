@@ -46,7 +46,7 @@ def tela_dashboard():
     bar_frame = ctk.CTkFrame(janela, width=1700, height=50, fg_color="#022200")
     bar_frame.place(x=0, y=0)
 
-    saldo_label = ctk.CTkLabel(bar_frame, text=f"Saldo: R${calculado}", width=100, height=40, fg_color="#0A3E0F", corner_radius=10)
+    saldo_label = ctk.CTkLabel(bar_frame, text=f"Saldo: R${calculado}", width=100, height=40, fg_color="#0A3E0F", corner_radius=10, font=(a,13))
     saldo_label.place(relx=0.99, rely=0.5, anchor="e")
 
     extrato_frame = ctk.CTkScrollableFrame(janela, width=250, height=700, fg_color="#2f2f2f")
@@ -172,6 +172,7 @@ def tela_remove_entrada():
 def tela_analisar_extrato():
     destruir()
 
+# ideias: graficos de gastos como separação por tópicos em cores.
 
 tela_dashboard()
 
